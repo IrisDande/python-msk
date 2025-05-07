@@ -53,6 +53,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger('msk_client')
 
+# Define global variables with default values
+DEFAULT_PROFILE = 'default'
+DEFAULT_REGION = 'us-east-1'
+CLUSTER_ARN = None
+BOOTSTRAP_SERVERS = []
+DEFAULT_NUM_PARTITIONS = 3
+DEFAULT_REPLICATION_FACTOR = 3
+DEFAULT_RETENTION_MS = 604800000  # 7 days in milliseconds
+MAX_RETRIES = 3
+RETRY_BACKOFF = 1.0
+
 
 class MSKClientError(Exception):
     """Base exception for MSK client errors"""
@@ -148,9 +159,9 @@ class MSKClient:
         self.region = region
         self.bootstrap_servers = BOOTSTRAP_SERVERS
         self.aws_session = None
-        self.aws_session = None
         self.token_provider = None  # Will hold an instance of MSKTokenProvider
         self.admin_client = None
+        self.producer = None
         self.consumer = None
 
         self._setup_aws_session()
@@ -496,7 +507,12 @@ class MSKClient:
 
 def parse_args():
     """Parse command line arguments"""
-
+    
+    # Declare globals at the beginning of the function
+    global DEFAULT_PROFILE, DEFAULT_REGION, CLUSTER_ARN, BOOTSTRAP_SERVERS
+    global DEFAULT_NUM_PARTITIONS, DEFAULT_REPLICATION_FACTOR, DEFAULT_RETENTION_MS
+    global MAX_RETRIES, RETRY_BACKOFF
+    
     parser = argparse.ArgumentParser(
         description='AWS MSK (Managed Streaming for Kafka) Client')
 
@@ -555,10 +571,6 @@ def parse_args():
     args = parser.parse_args()
 
     # Update global configuration values from command line arguments
-    global DEFAULT_PROFILE, DEFAULT_REGION, CLUSTER_ARN, BOOTSTRAP_SERVERS
-    global DEFAULT_NUM_PARTITIONS, DEFAULT_REPLICATION_FACTOR, DEFAULT_RETENTION_MS
-    global MAX_RETRIES, RETRY_BACKOFF
-
     DEFAULT_PROFILE = args.profile
     DEFAULT_REGION = args.region
     CLUSTER_ARN = args.cluster_arn
